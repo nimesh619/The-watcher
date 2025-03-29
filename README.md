@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # The Watcher
 
 ## Thama WIP BOSA
