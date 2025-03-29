@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Watcher - Loading</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Orbitron:wght@700&display=swap');
+    
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      background: transparent;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Orbitron', 'Cinzel Decorative', serif;
+    }
+
+    .splash-container {
+      width: 320px;
+      height: 380px;
+      border-radius: 24px;
+      background: rgb(14, 14, 14);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(5px);
+    }
+
+    .preloader {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .logo-container {
+      position: relative;
+      width: 240px;
+      height: 240px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .logo {
+      width: 75%;
+      height: 75%;
+      object-fit: contain;
+      filter: drop-shadow(0 0 25px rgba(139, 0, 0, 0.9));
+      animation: shine 3s infinite;
+      z-index: 2;
+    }
+
+    .outline {
+      position: absolute;
+      width: 230px;
+      height: 230px;
+      border: 2px solid #8b0000;
+      border-radius: 50%;
+      box-shadow: 0 0 30px rgba(139, 0, 0, 0.7);
+      animation: pulse 3s infinite;
+    }
+    
+    .loading-text {
+      font-size: 17px;
+      color: #ffffff;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      margin-top: 30px;
+      margin-bottom: 20px;
+    }
+    
+    .horizontal-loader {
+      width: 180px;
+      height: 3px;
+      background: rgba(30, 30, 30, 0.7);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .horizontal-loader::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, #700000, #ca0b0b);
+      border-radius: 4px;
+      animation: progress 2s ease-in-out infinite;
+      box-shadow: 0 0 15px rgba(212, 0, 0, 0.8);
+    }
+    
+    @keyframes shine {
+      0% {
+        filter: drop-shadow(0 0 15px rgba(139, 0, 0, 0.6));
+      }
+      50% {
+        filter: drop-shadow(0 0 30px rgba(139, 0, 0, 0.9));
+      }
+      100% {
+        filter: drop-shadow(0 0 15px rgba(139, 0, 0, 0.6));
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 15px rgba(139, 0, 0, 0.4);
+        transform: scale(0.98);
+      }
+      50% {
+        box-shadow: 0 0 30px rgba(139, 0, 0, 0.7);
+        transform: scale(1);
+      }
+      100% {
+        box-shadow: 0 0 15px rgba(139, 0, 0, 0.4);
+        transform: scale(0.98);
+      }
+    }
+    
+    @keyframes progress {
+      0% {
+        left: -100%;
+      }
+      100% {
+        left: 200%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="splash-container">
+    <div class="preloader">
+      <div class="logo-container">
+        <div class="outline"></div>
+        <img class="logo" src="./witcher-logo.png" alt="The Watcher Logo">
+      </div>
+      <div class="loading-text">INITIALIZING</div>
+      <div class="horizontal-loader"></div>
+    </div>
+  </div>
+</body>
+</html>
