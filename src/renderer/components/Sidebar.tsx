@@ -8,6 +8,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
   const navItems = [
     { id: 'dashboard', icon: 'fa-tachometer-alt', label: 'Dashboard' },
+    { id: 'filescanner', icon: 'fa-file-medical-alt', label: 'File Scanner' },
     { id: 'devices', icon: 'fa-usb', label: 'USB Devices' },
     { id: 'threats', icon: 'fa-shield-alt', label: 'Threats' },
     { id: 'logs', icon: 'fa-list', label: 'Activity Logs' },
@@ -51,4 +52,4 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
   );
 };
 
-export default Sidebar; 
+export default Sidebar;

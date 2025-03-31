@@ -154,7 +154,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
           
           <div className="detection-item">
-            <i className="detection-icon fa fa-usb"></i>
+            <i className="detection-icon fa fa-plug"></i>
             <div className="detection-info">
               <div className="detection-title">USB Device Connected</div>
               <div className="detection-desc">Kingston DataTraveler (E:)</div>

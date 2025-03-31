@@ -13,10 +13,14 @@ contextBridge.exposeInMainWorld(
     // Window control functions
     minimize: () => ipcRenderer.send('minimize-window'),
     maximize: () => ipcRenderer.send('maximize-window'),
-    close: () => ipcRenderer.send('close-window')
+    close: () => ipcRenderer.send('close-window'),
+    
+    // VirusTotal API methods
+    scanFile: (hash) => ipcRenderer.invoke('scan-file', hash),
+    getFileReport: (hash) => ipcRenderer.invoke('get-file-report', hash)
   }
 );
 
 window.addEventListener('DOMContentLoaded', () => {
   console.log('Preload script loaded!');
-}); 
+});

@@ -3,10 +3,11 @@ import Dashboard from './Dashboard';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import Notification from './Notification';
+import FilePicker from './FilePicker';
 
 // Sound effects
 const playDetectionSound = () => {
-  const audio = new Audio('./assets/sounds/quest-complete.mp3');
+  const audio = new Audio('./assets/sounds/alert.mp3');
   audio.play().catch(e => console.error('Error playing sound:', e));
 };
 
@@ -16,6 +17,7 @@ const App: React.FC = () => {
   const [isScanning, setIsScanning] = useState(true);
   const [connectedDevices, setConnectedDevices] = useState<any[]>([]);
   const [threatLevel, setThreatLevel] = useState<'normal' | 'warning' | 'danger'>('normal');
+  
   
   // Simulate USB detection
   useEffect(() => {
@@ -60,6 +62,7 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
   
+  
   const handleStartScan = () => {
     setIsScanning(true);
   };
@@ -74,6 +77,33 @@ const App: React.FC = () => {
   
   const dismissNotification = (id: number) => {
     setNotifications(prev => prev.filter(notification => notification.id !== id));
+  };
+
+  // Render the content based on active page
+  const renderContent = () => {
+    switch (activePage) {
+      case 'dashboard':
+        return (
+          <Dashboard 
+            isScanning={isScanning} 
+            devices={connectedDevices} 
+            threatLevel={threatLevel}
+          />
+        );
+      case 'filescanner':
+        return <FilePicker />;
+      default:
+        return (
+          <div className="panel">
+            <div className="panel-header">
+              <div className="panel-title">{activePage.charAt(0).toUpperCase() + activePage.slice(1)}</div>
+            </div>
+            <div className="panel-content">
+              <p>This section is under development.</p>
+            </div>
+          </div>
+        );
+    }
   };
 
   return (
@@ -91,11 +121,9 @@ const App: React.FC = () => {
           onNavigate={handleNavigate}
         />
         
-        <Dashboard 
-          isScanning={isScanning} 
-          devices={connectedDevices} 
-          threatLevel={threatLevel}
-        />
+        <div className="main-content">
+          {renderContent()}
+        </div>
       </div>
       
       {notifications.map(notification => (
@@ -112,4 +140,5 @@ const App: React.FC = () => {
   );
 };
 
-export default App; 
+
+export default App;

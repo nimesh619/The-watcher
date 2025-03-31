@@ -1,5 +1,10 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const axios = require('axios');
+
+// VirusTotal API key
+const VIRUSTOTAL_API_KEY = 'd60f914e126037a5f8d62cdf6474760784b88719a84981eedbebb16f16855630';
+const VIRUSTOTAL_API_URL = 'https://www.virustotal.com/api/v3';
 
 // Use process.env.NODE_ENV directly instead of electron-is-dev
 const isDev = process.env.NODE_ENV === 'development';
@@ -110,9 +115,100 @@ const setupWindowControls = () => {
   });
 };
 
+// Setup VirusTotal API handlers
+const setupVirusTotalApi = () => {
+  // Submit a file for scanning
+  ipcMain.handle('scan-file', async (event, hash) => {
+    try {
+      console.log(`Submitting file with hash ${hash} for scanning...`);
+      // In a real implementation, we would upload the file to VirusTotal
+      // For now, we'll just simulate a successful response
+      return {
+        success: true,
+        message: 'File submitted for scanning',
+        data: {
+          id: hash,
+          links: {
+            self: `https://www.virustotal.com/api/v3/analyses/${hash}`,
+          }
+        }
+      };
+    } catch (error) {
+      console.error('Error submitting file for scanning:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to submit file for scanning',
+      };
+    }
+  });
+  
+  // Get report for a file by its hash
+  ipcMain.handle('get-file-report', async (event, hash) => {
+    try {
+      console.log(`Getting report for file with hash ${hash}...`);
+      // In a real implementation, we would make an API request like:
+      /*
+      const response = await axios.get(
+        `${VIRUSTOTAL_API_URL}/files/${hash}`,
+        {
+          headers: {
+            'x-apikey': VIRUSTOTAL_API_KEY
+          }
+        }
+      );
+      return {
+        success: true,
+        data: response.data
+      };
+      */
+      
+      // For now simulate a response
+      // Generate a random number of detections
+      const totalEngines = 68;
+      const detections = Math.floor(Math.random() * totalEngines);
+      const isMalicious = detections > 5;
+      
+      return {
+        success: true,
+        data: {
+          data: {
+            attributes: {
+              last_analysis_stats: {
+                harmless: totalEngines - detections,
+                malicious: detections,
+                suspicious: 0,
+                undetected: 0,
+                timeout: 0
+              },
+              last_analysis_date: Date.now() / 1000,
+              meaningful_name: `sample-${hash.substring(0, 8)}.exe`,
+              total_votes: {
+                harmless: isMalicious ? 2 : 15,
+                malicious: isMalicious ? 18 : 1
+              }
+            },
+            id: hash,
+            links: {
+              self: `https://www.virustotal.com/gui/file/${hash}/detection`
+            },
+            type: 'file'
+          }
+        }
+      };
+    } catch (error) {
+      console.error('Error getting file report:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to get file report',
+      };
+    }
+  });
+};
+
 // When Electron is ready, create windows
 app.whenReady().then(() => {
   setupWindowControls();
+  setupVirusTotalApi();
   createSplashWindow();
   createMainWindow();
 

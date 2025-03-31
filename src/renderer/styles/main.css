@@ -465,4 +465,105 @@ body, html {
     border-right: none;
     border-bottom: 1px solid var(--primary-dark);
   }
-} 
+}
+
+/* File Scanner Styles */
+.file-drop-zone {
+  border: 2px dashed var(--primary-dark);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: var(--transition);
+  background-color: var(--secondary-dark);
+  min-height: 150px;
+}
+
+.file-drop-zone.dragging {
+  border-color: var(--primary-light);
+  background-color: rgba(139, 0, 0, 0.1);
+  box-shadow: var(--glow);
+}
+
+.file-drop-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.file-drop-content i {
+  color: var(--primary-light);
+  opacity: 0.8;
+}
+
+.file-drop-content p {
+  margin: 10px 0;
+}
+
+.selected-file {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--secondary);
+  padding: 12px;
+  border-radius: var(--border-radius);
+  margin-top: 15px;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scanner-progress {
+  margin: 15px 0;
+  width: 100%;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: var(--secondary-dark);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-dark), var(--primary-light));
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 8px var(--primary-dark);
+}
+
+.progress-text {
+  font-size: 14px;
+  color: var(--text-color-dark);
+  text-align: center;
+}
+
+.hash-value {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--text-color-dark);
+  background-color: var(--secondary-dark);
+  padding: 4px 8px;
+  border-radius: 4px;
+  word-break: break-all;
+}
+
+.mr-2 {
+  margin-right: 16px;
+}
+
+.mt-3 {
+  margin-top: 24px;
+}
