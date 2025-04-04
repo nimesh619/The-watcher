@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Watcher</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo:wght@400;500;600;700&family=Cinzel:wght@500;600;700&family=Cinzel+Decorative:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #8b0000;
+      --primary-light: #ca0b0b;
+      --primary-dark: #630000;
+      --secondary: #1a1a1a;
+      --secondary-light: #2a2a2a;
+      --secondary-dark: #0a0a0a;
+      --accent: #cfb53b;
+      --text-color: #e0e0e0;
+      --text-color-dark: #a0a0a0;
+      --danger: #d13438;
+      --success: #107c10;
+      --warning: #ff8c00;
+    }
+    
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      background-color: var(--secondary-dark);
+      color: var(--text-color);
+      font-family: 'Rajdhani', sans-serif;
+    }
+    
+    #root {
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/renderer/index.tsx"></script>
+</body>
+</html>

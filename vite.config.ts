@@ -1,25 +1,39 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
+import { resolve } from 'path';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   base: './',
+  root: '.',
+  
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
+      '@': resolve(__dirname, 'src'),
+      '@renderer': resolve(__dirname, 'src/renderer'),
+      '@components': resolve(__dirname, 'src/renderer/components'),
+      '@styles': resolve(__dirname, 'src/renderer/styles'),
     }
   },
+
+  server: {
+    port: 5173,
+    strictPort: true,
+  },
+
   build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    emptyOutDir: true,
+    target: 'esnext',
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'index.html'),
-        splash: path.resolve(__dirname, 'splash.html'),
+        main: resolve(__dirname, 'index.html'),
       },
     },
   },
-  server: {
-    port: 3000
-  }
+
+  optimizeDeps: {
+    exclude: ['electron']
+  },
 });

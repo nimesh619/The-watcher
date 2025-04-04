@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
+import FileScanner from './FileScanner';
+import ScanResults from './ScanResults';
+import '../styles/file-scanner.css';
 
 interface Device {
   id: number;
@@ -10,17 +13,33 @@ interface Device {
   lastConnected: Date;
 }
 
+interface ScanResult {
+  threatLevel: 'normal' | 'warning' | 'danger';
+  detections: number;
+  total: number;
+  detectedBy: string[];
+  permalink: string;
+  scan_date: string;
+  sha256: string;
+  file_name: string;
+}
+
 interface DashboardProps {
   isScanning: boolean;
   devices: Device[];
   threatLevel: 'normal' | 'warning' | 'danger';
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ 
-  isScanning, 
-  devices, 
-  threatLevel 
+const Dashboard: React.FC<DashboardProps> = ({
+  isScanning,
+  devices,
+  threatLevel
 }) => {
+  const [latestScan, setLatestScan] = useState<ScanResult | null>(null);
+
+  const handleScanComplete = (result: ScanResult) => {
+    setLatestScan(result);
+  };
 
   const formatDate = (date: Date) => {
     return date.toLocaleString();
@@ -53,6 +72,20 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <main className="main-content">
+      {/* File Scanner Panel */}
+      <div className="panel mb-2">
+        <div className="panel-header">
+          <div className="panel-title">File Scanner</div>
+        </div>
+        <div className="panel-content">
+          <FileScanner onScanComplete={handleScanComplete} />
+          
+          {latestScan && (
+            <ScanResults result={latestScan} />
+          )}
+        </div>
+      </div>
+
       {/* Witcher-style scanner visualization */}
       <div className="panel mb-2">
         <div className="panel-header">

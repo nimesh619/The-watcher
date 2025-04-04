@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
+const { setupFileScanningHandlers } = require('./src/main/fileScanning.js');
 const path = require('path');
 
 // Use process.env.NODE_ENV directly instead of electron-is-dev
@@ -22,20 +23,16 @@ const createSplashWindow = () => {
     frame: false,
     alwaysOnTop: true,
     webPreferences: {
-      nodeIntegration: true,
+      nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'src/preload/index.js')
     },
     roundedCorners: true,
     titleBarStyle: 'hidden',
   });
 
   // Load splash screen
-  if (isDev) {
-    splashWindow.loadFile(path.join(__dirname, 'public/splash.html'));
-  } else {
-    splashWindow.loadFile(path.join(__dirname, 'public/splash.html'));
-  }
+  splashWindow.loadFile('public/splash.html');
 
   // Show splash screen when ready
   splashWindow.once('ready-to-show', () => {
@@ -56,28 +53,47 @@ const createMainWindow = () => {
     show: false,
     frame: false,
     webPreferences: {
-      nodeIntegration: true,
+      nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'src/preload/index.js'),
+      webSecurity: true
     },
+  });
+
+  // Set Content Security Policy
+  mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          "default-src 'self' 'unsafe-inline' https:;",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:;",
+          "style-src 'self' 'unsafe-inline' https:;",
+          "img-src 'self' data: https:;",
+          "font-src 'self' https: data:;",
+          "connect-src 'self' https:;"
+        ].join(' ')
+      }
+    });
   });
 
   // Load main app
   if (isDev) {
-    mainWindow.loadFile(path.join(__dirname, 'public/index.html'));
-    // Open DevTools in development mode
+    // In development, load from vite dev server
+    mainWindow.loadURL('http://localhost:5173/index.html');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, 'public/index.html'));
+    // In production, load the built index.html
+    mainWindow.loadFile('dist/index.html');
   }
 
   // Show main window after delay
   mainWindow.once('ready-to-show', () => {
-    // Simulate loading time (5 seconds)
+    // Simulate loading time (2 seconds)
     setTimeout(() => {
       if (mainWindow) mainWindow.show();
       if (splashWindow) splashWindow.close();
-    }, 5000);
+    }, 2000);
   });
 
   // Handle window close
@@ -113,6 +129,7 @@ const setupWindowControls = () => {
 // When Electron is ready, create windows
 app.whenReady().then(() => {
   setupWindowControls();
+  setupFileScanningHandlers();
   createSplashWindow();
   createMainWindow();
 
