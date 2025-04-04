@@ -19,6 +19,8 @@ const FileScanner: React.FC<FileScannerProps> = ({ onScanComplete }) => {
     const [isScanning, setIsScanning] = useState(false);
     const [currentFile, setCurrentFile] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [progress, setProgress] = useState<number>(0);
+    const [progressStage, setProgressStage] = useState<string>('');
 
     const handleFileSelect = async () => {
         try {
@@ -37,16 +39,36 @@ const FileScanner: React.FC<FileScannerProps> = ({ onScanComplete }) => {
         try {
             setIsScanning(true);
             setError(null);
+            setProgress(0);
+            setProgressStage('Calculating file hash...');
+            
+            // Simulate progress updates (in a real app, these would come from the main process)
+            const progressInterval = setInterval(() => {
+                setProgress(prev => {
+                    if (prev < 95) {
+                        // Update the stage based on progress
+                        if (prev === 10) setProgressStage('Uploading file to VirusTotal...');
+                        if (prev === 40) setProgressStage('Analyzing file...');
+                        if (prev === 70) setProgressStage('Getting results...');
+                        return prev + 1;
+                    }
+                    return prev;
+                });
+            }, 500);
 
             const result = await window.api.scanFile(filePath);
+            
+            clearInterval(progressInterval);
+            setProgress(100);
+            setProgressStage('Scan completed');
             
             if (result.success && result.data) {
                 onScanComplete(result.data);
             } else {
                 setError(result.error || 'Scan failed');
             }
-        } catch (err) {
-            setError('Failed to scan file');
+        } catch (err: any) {
+            setError(`Failed to scan file: ${err.message || 'Unknown error'}`);
             console.error('Scanning error:', err);
         } finally {
             setIsScanning(false);
@@ -54,7 +76,7 @@ const FileScanner: React.FC<FileScannerProps> = ({ onScanComplete }) => {
     };
 
     return (
-        <div>
+        <div className="file-scanner">
             <div className="flex-row gap-2 mb-4">
                 <button 
                     className="control-button primary-button"
@@ -70,13 +92,20 @@ const FileScanner: React.FC<FileScannerProps> = ({ onScanComplete }) => {
                 <div className="flex-col gap-2">
                     <div className="file-info">
                         <i className="fa fa-file mr-2"></i>
-                        {currentFile.split('/').pop()}
+                        {currentFile.split('\\').pop()}
                     </div>
 
                     {isScanning && (
                         <div className="scanning-indicator">
-                            <div className="spinner"></div>
-                            <span>Scanning file... This may take a few minutes</span>
+                            <div className="flex-col w-full gap-1">
+                                <div className="flex-row justify-between">
+                                    <span>{progressStage}</span>
+                                    <span>{progress}%</span>
+                                </div>
+                                <div className="progress-bar">
+                                    <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

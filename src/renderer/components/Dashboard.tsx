@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FileScanner from './FileScanner';
 import ScanResults from './ScanResults';
 import '../styles/file-scanner.css';
@@ -26,25 +26,94 @@ interface ScanResult {
 
 interface DashboardProps {
   isScanning: boolean;
-  devices: Device[];
   threatLevel: 'normal' | 'warning' | 'danger';
+  onScanComplete: (result: ScanResult) => void;
+  onError: (message: string) => void;
+  scanResult: ScanResult | null;
+  scanHistory?: ScanResult[];
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
   isScanning,
-  devices,
-  threatLevel
+  threatLevel,
+  onScanComplete,
+  onError,
+  scanResult,
+  scanHistory = []
 }) => {
-  const [latestScan, setLatestScan] = useState<ScanResult | null>(null);
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [lastScanTime, setLastScanTime] = useState<Date | null>(null);
+  const [activities, setActivities] = useState<Array<{
+    icon: string;
+    title: string;
+    desc: string;
+    time: Date;
+    type?: 'normal' | 'warning' | 'danger';
+  }>>([
+    {
+      icon: 'fa-shield-alt',
+      title: 'System Scan Completed',
+      desc: 'No threats detected',
+      time: new Date(Date.now() - 1800000)
+    },
+    {
+      icon: 'fa-usb',
+      title: 'USB Device Connected',
+      desc: 'Kingston DataTraveler (E:)',
+      time: new Date(Date.now() - 3600000)
+    }
+  ]);
+
+  // When a scan is completed, update the last scan time and add to activities
+  useEffect(() => {
+    if (scanResult) {
+      setLastScanTime(new Date(scanResult.scan_date));
+    }
+  }, [scanResult]);
+
+  // Convert scan history to activities
+  useEffect(() => {
+    if (scanHistory && scanHistory.length > 0) {
+      const historyActivities = scanHistory.map(scan => ({
+        icon: scan.threatLevel === 'normal' ? 'fa-shield-alt' : 
+             scan.threatLevel === 'warning' ? 'fa-exclamation-triangle' : 'fa-skull-crossbones',
+        title: 'File Scan Completed',
+        desc: scan.threatLevel === 'normal' ? 
+              `No threats detected in ${scan.file_name}` : 
+              `${scan.detections} threats found in ${scan.file_name}`,
+        time: new Date(scan.scan_date),
+        type: scan.threatLevel
+      }));
+      
+      // Combine scan history activities with other system activities
+      const systemActivities = activities.filter(act => 
+        act.title === 'System Scan Completed' || act.title === 'USB Device Connected'
+      );
+      
+      // Sort all activities by time, most recent first
+      const allActivities = [...historyActivities, ...systemActivities]
+        .sort((a, b) => b.time.getTime() - a.time.getTime());
+      
+      setActivities(allActivities);
+      
+      // Set last scan time if not already set
+      if (!lastScanTime && historyActivities.length > 0) {
+        setLastScanTime(historyActivities[0].time);
+      }
+    }
+  }, [scanHistory]);
 
   const handleScanComplete = (result: ScanResult) => {
-    setLatestScan(result);
+    onScanComplete(result);
+  };
+
+  const handleScanError = (message: string) => {
+    onError(message);
   };
 
   const formatDate = (date: Date) => {
     return date.toLocaleString();
   };
-
 
   const getDeviceIcon = (type: string) => {
     switch (type) {
@@ -70,6 +139,23 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
+  // Simulate refreshing devices
+  const refreshDevices = () => {
+    // This would typically call an API to get connected devices
+    // For now, we'll just use mock data
+    setDevices([
+      {
+        id: 1,
+        name: 'Kingston DataTraveler',
+        type: 'usb',
+        status: 'connected',
+        path: 'E:/',
+        size: '16 GB',
+        lastConnected: new Date()
+      }
+    ]);
+  };
+
   return (
     <main className="main-content">
       {/* File Scanner Panel */}
@@ -78,10 +164,12 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="panel-title">File Scanner</div>
         </div>
         <div className="panel-content">
-          <FileScanner onScanComplete={handleScanComplete} />
+          <FileScanner 
+            onScanComplete={handleScanComplete} 
+          />
           
-          {latestScan && (
-            <ScanResults result={latestScan} />
+          {scanResult && (
+            <ScanResults result={scanResult} />
           )}
         </div>
       </div>
@@ -91,7 +179,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="panel-header">
           <div className="panel-title">System Scanner</div>
           <div className="flex-row gap-1">
-            <div className="status-indicator active"></div>
+            <div className={`status-indicator ${isScanning ? 'active' : 'inactive'}`}></div>
             <span>{isScanning ? 'Scanning...' : 'Idle'}</span>
           </div>
         </div>
@@ -122,7 +210,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             
             <div>
               <div className="mb-1">Last Scan:</div>
-              <div>{formatDate(new Date())}</div>
+              <div>{lastScanTime ? formatDate(lastScanTime) : 'No scan yet'}</div>
             </div>
           </div>
         </div>
@@ -133,7 +221,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="panel-header">
           <div className="panel-title">Connected Devices</div>
           <div className="flex-row gap-1">
-            <button className="control-button">
+            <button className="control-button" onClick={refreshDevices}>
               <i className="fa fa-sync-alt"></i>
               Refresh
             </button>
@@ -177,33 +265,19 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
         
         <div className="panel-content">
-          <div className="detection-item">
-            <i className="detection-icon fa fa-shield-alt"></i>
-            <div className="detection-info">
-              <div className="detection-title">System Scan Completed</div>
-              <div className="detection-desc">No threats detected</div>
-            </div>
-            <div className="detection-time">{formatDate(new Date(Date.now() - 1800000))}</div>
-          </div>
-          
-          <div className="detection-item">
-            <i className="detection-icon fa fa-usb"></i>
-            <div className="detection-info">
-              <div className="detection-title">USB Device Connected</div>
-              <div className="detection-desc">Kingston DataTraveler (E:)</div>
-            </div>
-            <div className="detection-time">{formatDate(new Date(Date.now() - 3600000))}</div>
-          </div>
-          
-          {threatLevel !== 'normal' && (
-            <div className="detection-item">
-              <i className="detection-icon fa fa-exclamation-triangle"></i>
-              <div className="detection-info">
-                <div className="detection-title">Unknown USB Device Detected</div>
-                <div className="detection-desc">Potentially unsafe device connected</div>
+          {activities.length === 0 ? (
+            <div className="text-center">No recent activity</div>
+          ) : (
+            activities.map((activity, index) => (
+              <div key={index} className={`detection-item ${activity.type || ''}`}>
+                <i className={`detection-icon fa ${activity.icon}`}></i>
+                <div className="detection-info">
+                  <div className="detection-title">{activity.title}</div>
+                  <div className="detection-desc">{activity.desc}</div>
+                </div>
+                <div className="detection-time">{formatDate(activity.time)}</div>
               </div>
-              <div className="detection-time">{formatDate(new Date())}</div>
-            </div>
+            ))
           )}
         </div>
       </div>
@@ -211,4 +285,4 @@ const Dashboard: React.FC<DashboardProps> = ({
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

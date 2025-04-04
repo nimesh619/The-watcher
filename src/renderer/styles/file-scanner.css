@@ -64,6 +64,49 @@
     }
 }
 
+/* Progress Bar Styles */
+.progress-bar {
+    height: 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4a90e2, #357abd);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.flex-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.flex-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.gap-1 {
+    gap: 0.25rem;
+}
+
+.gap-2 {
+    gap: 0.5rem;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
 /* Scan Results Styles */
 .scan-results {
     background: rgba(255, 255, 255, 0.05);
@@ -124,10 +167,155 @@
 .detection-item {
     padding: 0.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
 }
 
 .detection-item:last-child {
     border-bottom: none;
+}
+
+/* Activity Panel Styles */
+.detection-item {
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.detection-item.warning {
+    background-color: rgba(255, 152, 0, 0.1);
+}
+
+.detection-item.danger {
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+.detection-icon {
+    font-size: 1.25rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.detection-info {
+    flex: 1;
+}
+
+.detection-title {
+    font-weight: 500;
+}
+
+.detection-desc {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.detection-time {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* Notification Styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: rgba(30, 30, 30, 0.9);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    gap: 1rem;
+    min-width: 300px;
+    max-width: 400px;
+    transform: translateX(0);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.notification.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.notification.hidden {
+    opacity: 0;
+    transform: translateX(100%);
+}
+
+.notification-icon {
+    font-size: 1.5rem;
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    padding: 0.25rem;
+    font-size: 1rem;
+    transition: color 0.2s ease;
+}
+
+.notification-close:hover {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.notification.info .notification-icon {
+    color: #4a90e2;
+}
+
+.notification.success .notification-icon {
+    color: #4caf50;
+}
+
+.notification.warning .notification-icon {
+    color: #ff9800;
+}
+
+.notification.error .notification-icon {
+    color: #f44336;
+}
+
+.notification:after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 4px;
+    background: currentColor;
+    border-radius: 0 0 0 0.5rem;
+    animation: notification-timer 5s linear forwards;
+}
+
+.notification.info:after {
+    background: #4a90e2;
+}
+
+.notification.success:after {
+    background: #4caf50;
+}
+
+.notification.warning:after {
+    background: #ff9800;
+}
+
+.notification.error:after {
+    background: #f44336;
+}
+
+@keyframes notification-timer {
+    to {
+        width: 0%;
+    }
+    from {
+        width: 100%;
+    }
 }
 
 /* Custom scrollbar for detections list */
