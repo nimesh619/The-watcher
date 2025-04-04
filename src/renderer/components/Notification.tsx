@@ -1,69 +1,62 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface NotificationProps {
-  id: number;
-  title: string;
   message: string;
-  type: 'info' | 'warning' | 'danger';
-  onDismiss: (id: number) => void;
+  type: 'info' | 'success' | 'warning' | 'error';
+  onClose: () => void;
+  duration?: number;
 }
 
 const Notification: React.FC<NotificationProps> = ({ 
-  id, 
-  title, 
   message, 
   type, 
-  onDismiss 
+  onClose,
+  duration = 5000
 }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  
+  const [isVisible, setIsVisible] = useState(true);
+
   useEffect(() => {
-    // Show the notification with a slight delay for animation
-    setTimeout(() => {
-      setIsVisible(true);
-    }, 100);
+    // Reset visibility when a new notification comes in
+    setIsVisible(true);
     
-    // Auto-dismiss after 8 seconds
+    // Auto-hide the notification after duration
     const timer = setTimeout(() => {
-      handleDismiss();
-    }, 8000);
+      setIsVisible(false);
+      setTimeout(onClose, 300); // Wait for fade-out animation to complete
+    }, duration);
     
     return () => clearTimeout(timer);
-  }, []);
-  
-  const handleDismiss = () => {
-    setIsVisible(false);
-    setTimeout(() => {
-      onDismiss(id);
-    }, 500); // Time for exit animation
-  };
-  
+  }, [message, duration, onClose]);
 
   const getIcon = () => {
     switch (type) {
       case 'info':
         return 'fa-info-circle';
+      case 'success':
+        return 'fa-check-circle';
       case 'warning':
+        return 'fa-exclamation-triangle';
+      case 'error':
         return 'fa-exclamation-circle';
-      case 'danger':
-        return 'fa-skull';
       default:
-        return 'fa-bell';
+        return 'fa-info-circle';
     }
   };
-  
+
   return (
-    <div className={`medallion-alert ${isVisible ? 'show' : ''}`}>
-      <div className="medallion-alert-header">
-        <img src="./witcher-logo.png" alt="Medallion" className="medallion-icon" />
-        <div className="medallion-title">{title}</div>
+    <div className={`notification ${type} ${isVisible ? 'visible' : 'hidden'}`}>
+      <div className="notification-icon">
+        <i className={`fa ${getIcon()}`}></i>
       </div>
-      <div className="medallion-message">{message}</div>
-      <div className="flex-row" style={{ justifyContent: 'flex-end', marginTop: '10px' }}>
-        <button className="control-button" onClick={handleDismiss}>
-          Dismiss
-        </button>
+      <div className="notification-content">
+        {message}
       </div>
+      <button className="notification-close" onClick={() => {
+        setIsVisible(false);
+        setTimeout(onClose, 300);
+      }}>
+        <i className="fa fa-times"></i>
+      </button>
     </div>
   );
 };

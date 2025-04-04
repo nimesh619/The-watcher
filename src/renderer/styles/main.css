@@ -1,12 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Orbitron:wght@400;500;600;700&display=swap');
-
+/* Import base styles first */
 :root {
   --primary: #8b0000;
   --primary-light: #ca0b0b;
   --primary-dark: #630000;
-  --secondary: #262525;
-  --secondary-light: #353535;
-  --secondary-dark: #121212;
+  --secondary: #1a1a1a;
+  --secondary-light: #2a2a2a;
+  --secondary-dark: #0a0a0a;
   --accent: #cfb53b;
   --text-color: #e0e0e0;
   --text-color-dark: #a0a0a0;
@@ -17,10 +16,11 @@
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
   --glow: 0 0 10px rgba(139, 0, 0, 0.5);
   --glow-strong: 0 0 20px rgba(139, 0, 0, 0.8);
-  --border-radius: 8px;
+  --border-radius: 6px;
   --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
+/* Reset and base styles */
 * {
   margin: 0;
   padding: 0;
@@ -32,16 +32,27 @@ body, html {
   width: 100%;
   background-color: var(--secondary-dark);
   color: var(--text-color);
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Rajdhani', sans-serif;
   overflow: hidden;
   user-select: none;
+  font-size: 15px;
 }
 
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+/* Import other styles */
+@import './file-scanner.css';
+
+/* App Layout */
 #app {
   height: 100%;
   width: 100%;
   display: flex;
   flex-direction: column;
+  background-color: var(--secondary-dark);
 }
 
 .app-header {
@@ -54,6 +65,7 @@ body, html {
   padding: 0 20px;
   box-shadow: var(--shadow);
   z-index: 10;
+  -webkit-app-region: drag;
 }
 
 .app-title {
@@ -69,102 +81,57 @@ body, html {
 .app-logo {
   height: 36px;
   width: 36px;
+  -webkit-app-region: no-drag;
 }
 
 .app-controls {
   display: flex;
   gap: 15px;
+  -webkit-app-region: no-drag;
 }
 
-.control-button {
-  background: transparent;
-  border: 1px solid var(--primary-dark);
-  color: var(--text-color);
-  padding: 6px 12px;
-  border-radius: var(--border-radius);
-  cursor: pointer;
-  transition: var(--transition);
+.window-controls {
+  display: flex;
+  gap: 8px;
+  margin-left: 15px;
+  -webkit-app-region: no-drag;
+}
+
+.window-control-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-family: 'Orbitron', sans-serif;
-  font-size: 14px;
+  justify-content: center;
+  color: var(--text-color);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
 }
 
-.control-button:hover {
-  background-color: var(--primary-dark);
-  border-color: var(--primary);
-  box-shadow: var(--glow);
+.window-control-button:hover {
+  background-color: var(--secondary-light);
 }
 
-.control-button.active {
-  background-color: var(--primary);
-  border-color: var(--primary-light);
-  box-shadow: var(--glow-strong);
+.window-control-button.close:hover {
+  background-color: var(--danger);
 }
 
 .app-content {
   flex: 1;
   display: flex;
   overflow: hidden;
+  background-color: var(--secondary-dark);
 }
 
-.sidebar {
-  width: 250px;
-  background-color: var(--secondary);
-  border-right: 1px solid var(--primary-dark);
-  padding: 20px 0;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar-section {
-  margin-bottom: 25px;
-}
-
-.sidebar-title {
-  font-size: 16px;
-  color: var(--primary-light);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 15px;
-  padding: 0 20px;
-}
-
-.nav-item {
-  padding: 12px 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  transition: var(--transition);
-  border-left: 3px solid transparent;
-}
-
-.nav-item:hover {
-  background-color: var(--secondary-light);
-  border-left-color: var(--primary-dark);
-}
-
-.nav-item.active {
-  background-color: var(--secondary-light);
-  border-left-color: var(--primary);
-  color: var(--accent);
-}
-
-.nav-item-icon {
-  font-size: 18px;
-  width: 24px;
-  text-align: center;
-}
-
+/* Layout Components */
 .main-content {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
   background-color: var(--secondary-dark);
-  position: relative;
 }
 
 .panel {
@@ -185,7 +152,7 @@ body, html {
 }
 
 .panel-title {
-  font-family: 'Cinzel Decorative', serif;
+  font-family: 'Cinzel', serif;
   font-size: 18px;
   color: var(--primary-light);
 }
@@ -194,44 +161,40 @@ body, html {
   padding: 15px;
 }
 
-.detection-item {
+/* Button Styles */
+.control-button {
   display: flex;
   align-items: center;
-  padding: 12px 15px;
-  border-bottom: 1px solid var(--secondary-dark);
+  gap: 8px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--primary-dark);
+  color: var(--text-color);
+  border-radius: var(--border-radius);
+  cursor: pointer;
   transition: var(--transition);
-}
-
-.detection-item:hover {
-  background-color: var(--secondary-light);
-}
-
-.detection-icon {
-  font-size: 20px;
-  margin-right: 15px;
-  color: var(--danger);
-}
-
-.detection-info {
-  flex: 1;
-}
-
-.detection-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 5px;
-}
-
-.detection-desc {
+  font-family: 'Exo', sans-serif;
   font-size: 14px;
-  color: var(--text-color-dark);
 }
 
-.detection-time {
-  font-size: 12px;
-  color: var(--text-color-dark);
+.control-button:hover:not(:disabled) {
+  background-color: var(--primary-dark);
+  border-color: var(--primary);
+  box-shadow: var(--glow);
 }
 
+.control-button.active {
+  background-color: var(--primary);
+  border-color: var(--primary-light);
+  box-shadow: var(--glow-strong);
+}
+
+.control-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Status Indicators */
 .status-indicator {
   display: inline-block;
   width: 10px;
@@ -240,7 +203,7 @@ body, html {
   margin-right: 8px;
 }
 
-.status-indicator.active {
+.status-indicator.normal {
   background-color: var(--success);
   box-shadow: 0 0 8px var(--success);
 }
@@ -255,6 +218,7 @@ body, html {
   box-shadow: 0 0 8px var(--danger);
 }
 
+/* Utility Classes */
 .flex-row {
   display: flex;
   align-items: center;
@@ -265,14 +229,6 @@ body, html {
   flex-direction: column;
 }
 
-.mb-1 {
-  margin-bottom: 10px;
-}
-
-.mb-2 {
-  margin-bottom: 20px;
-}
-
 .gap-1 {
   gap: 10px;
 }
@@ -281,157 +237,25 @@ body, html {
   gap: 20px;
 }
 
-.flex-wrap {
-  flex-wrap: wrap;
-}
-
-/* Witcher-style medallion notification */
-.medallion-alert {
-  position: fixed;
-  top: 80px;
-  right: 20px;
-  background-color: rgba(10, 10, 10, 0.9);
-  border: 1px solid var(--primary);
-  border-radius: var(--border-radius);
-  padding: 15px;
-  box-shadow: var(--glow-strong);
-  z-index: 100;
-  animation: pulse-alert 2s infinite;
-  max-width: 350px;
-  transform: translateX(120%);
-  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.medallion-alert.show {
-  transform: translateX(0);
-}
-
-.medallion-alert-header {
-  display: flex;
-  align-items: center;
+.mb-1 {
   margin-bottom: 10px;
 }
 
-.medallion-icon {
-  width: 30px;
-  height: 30px;
-  margin-right: 10px;
-}
-
-.medallion-title {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 16px;
-  color: var(--primary-light);
-}
-
-.medallion-message {
-  font-size: 14px;
-  color: var(--text-color);
-}
-
-@keyframes pulse-alert {
-  0% {
-    box-shadow: 0 0 15px rgba(139, 0, 0, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 25px rgba(139, 0, 0, 0.8);
-  }
-  100% {
-    box-shadow: 0 0 15px rgba(139, 0, 0, 0.5);
-  }
-}
-
-/* Witcher-style scanner visualization */
-.scanner-visual {
-  width: 100%;
-  height: 200px;
-  background-color: var(--secondary-dark);
-  border-radius: var(--border-radius);
-  position: relative;
-  overflow: hidden;
+.mb-2 {
   margin-bottom: 20px;
 }
 
-.scanner-grid {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    linear-gradient(to right, rgba(75, 0, 0, 0.1) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(75, 0, 0, 0.1) 1px, transparent 1px);
-  background-size: 20px 20px;
-  z-index: 1;
+.text-center {
+  text-align: center;
 }
 
-.scanner-line {
-  position: absolute;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
-  top: 50%;
-  animation: scan 3s ease-in-out infinite;
-  z-index: 2;
-  box-shadow: 0 0 10px var(--primary-light);
+.mr-2 {
+  margin-right: 0.5rem;
 }
 
-@keyframes scan {
-  0%, 100% { top: 0; }
-  50% { top: 100%; }
-}
-
-/* Device card */
-.device-card {
-  background-color: var(--secondary);
-  border-radius: var(--border-radius);
-  padding: 15px;
-  margin-bottom: 15px;
-  transition: var(--transition);
-  border-left: 3px solid var(--primary-dark);
-}
-
-.device-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
-}
-
-.device-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.device-icon {
-  font-size: 20px;
-  color: var(--primary-light);
-  margin-right: 10px;
-}
-
-.device-name {
-  font-weight: 600;
-  font-size: 16px;
-}
-
-.device-details {
-  font-size: 14px;
-  color: var(--text-color-dark);
-}
-
-/* USB Detection Animation */
-@keyframes pulse-detect {
-  0% { transform: scale(0.95); opacity: 0.7; }
-  50% { transform: scale(1.05); opacity: 1; }
-  100% { transform: scale(0.95); opacity: 0.7; }
-}
-
-.pulse-animation {
-  animation: pulse-detect 1.5s infinite;
-}
-
-/* Custom scrollbar */
+/* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 8px;
-  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -446,23 +270,3 @@ body, html {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary);
 }
-
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-  .sidebar {
-    width: 200px;
-  }
-}
-
-@media (max-width: 768px) {
-  .app-content {
-    flex-direction: column;
-  }
-  
-  .sidebar {
-    width: 100%;
-    max-height: 200px;
-    border-right: none;
-    border-bottom: 1px solid var(--primary-dark);
-  }
-} 

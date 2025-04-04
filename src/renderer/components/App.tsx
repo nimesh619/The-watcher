@@ -1,115 +1,121 @@
 import React, { useState, useEffect } from 'react';
 import Dashboard from './Dashboard';
-import Sidebar from './Sidebar';
 import Header from './Header';
 import Notification from './Notification';
 
-// Sound effects
-const playDetectionSound = () => {
-  const audio = new Audio('./assets/sounds/quest-complete.mp3');
-  audio.play().catch(e => console.error('Error playing sound:', e));
-};
+interface ScanResult {
+  threatLevel: 'normal' | 'warning' | 'danger';
+  detections: number;
+  total: number;
+  detectedBy: string[];
+  permalink: string;
+  scan_date: string;
+  sha256: string;
+  file_name: string;
+}
 
 const App: React.FC = () => {
-  const [activePage, setActivePage] = useState('dashboard');
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [isScanning, setIsScanning] = useState(true);
-  const [connectedDevices, setConnectedDevices] = useState<any[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
   const [threatLevel, setThreatLevel] = useState<'normal' | 'warning' | 'danger'>('normal');
-  
-  // Simulate USB detection
-  useEffect(() => {
-    // Mock data - in a real app, this would come from electron's main process
-    const mockDevices = [
-      { id: 1, name: 'Kingston DataTraveler', type: 'usb', status: 'connected', path: 'E:', size: '16GB', lastConnected: new Date() },
-      { id: 2, name: 'Western Digital HDD', type: 'hdd', status: 'connected', path: 'D:', size: '1TB', lastConnected: new Date() }
-    ];
-    
-    setConnectedDevices(mockDevices);
-    
-    // Simulate detection of a new device after 10 seconds
-    const timer = setTimeout(() => {
-      const newDevice = { 
-        id: 3, 
-        name: 'Unknown USB Device', 
-        type: 'usb', 
-        status: 'warning', 
-        path: 'F:', 
-        size: '32GB', 
-        lastConnected: new Date() 
-      };
-      
-      setConnectedDevices(prev => [...prev, newDevice]);
-      setThreatLevel('warning');
-      
-      // Show notification and play sound
-      setNotifications(prev => [
-        ...prev, 
-        { 
-          id: Date.now(), 
-          title: 'Unknown USB Device Detected', 
-          message: 'An unrecognized USB device has been connected to your system.',
-          type: 'warning',
-          time: new Date()
-        }
-      ]);
-      
-      playDetectionSound();
-    }, 10000);
-    
-    return () => clearTimeout(timer);
-  }, []);
-  
-  const handleStartScan = () => {
-    setIsScanning(true);
-  };
-  
-  const handleStopScan = () => {
+  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+  const [scanHistory, setScanHistory] = useState<ScanResult[]>([]);
+  const [notification, setNotification] = useState<{message: string, type: 'info' | 'success' | 'warning' | 'error'} | null>(null);
+
+  const handleScanComplete = (result: ScanResult) => {
+    setScanResult(result);
+    setThreatLevel(result.threatLevel);
     setIsScanning(false);
+    
+    // Update scan history
+    setScanHistory(prevHistory => [result, ...prevHistory]);
+    
+    // Show notification based on threat level
+    if (result.threatLevel === 'danger') {
+      setNotification({
+        message: `High threat detected! ${result.detections} malicious findings.`,
+        type: 'error'
+      });
+    } else if (result.threatLevel === 'warning') {
+      setNotification({
+        message: `Warning: Potential threat detected with ${result.detections} findings.`,
+        type: 'warning'
+      });
+    } else {
+      setNotification({
+        message: 'File scan completed: No threats detected.',
+        type: 'success'
+      });
+    }
   };
-  
-  const handleNavigate = (page: string) => {
-    setActivePage(page);
+
+  const handleScanStart = () => {
+    setIsScanning(true);
+    setScanResult(null);
   };
-  
-  const dismissNotification = (id: number) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
+
+  const handleError = (errorMessage: string) => {
+    setIsScanning(false);
+    setNotification({
+      message: `Error: ${errorMessage}`,
+      type: 'error'
+    });
   };
+
+  useEffect(() => {
+    // Load scan history on component mount
+    const loadScanHistory = async () => {
+      try {
+        const history = await window.api.getScanHistory();
+        setScanHistory(history);
+        
+        // If history exists, set the most recent scan result and threat level
+        if (history.length > 0) {
+          setScanResult(history[0]);
+          setThreatLevel(history[0].threatLevel);
+          
+          // Show initial info notification
+          setNotification({
+            message: `Loaded ${history.length} previous scan${history.length !== 1 ? 's' : ''}`,
+            type: 'info'
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load scan history:', error);
+      }
+    };
+    
+    loadScanHistory();
+  }, []);
 
   return (
     <div id="app">
       <Header 
         isScanning={isScanning} 
-        onStartScan={handleStartScan} 
-        onStopScan={handleStopScan}
+        onStartScan={handleScanStart}
+        onStopScan={() => setIsScanning(false)}
         threatLevel={threatLevel}
       />
       
-      <div className="app-content">
-        <Sidebar 
-          activePage={activePage} 
-          onNavigate={handleNavigate}
-        />
-        
-        <Dashboard 
-          isScanning={isScanning} 
-          devices={connectedDevices} 
-          threatLevel={threatLevel}
-        />
-      </div>
-      
-      {notifications.map(notification => (
+      {notification && (
         <Notification
-          key={notification.id}
-          id={notification.id}
-          title={notification.title}
           message={notification.message}
           type={notification.type}
-          onDismiss={dismissNotification}
+          onClose={() => setNotification(null)}
         />
-      ))}
+      )}
+      
+      <div className="app-content">
+        <Dashboard 
+          isScanning={isScanning}
+          onScanComplete={handleScanComplete}
+          onError={handleError}
+          scanResult={scanResult}
+          threatLevel={threatLevel}
+          scanHistory={scanHistory}
+        />
+      </div>
     </div>
   );
 };
 
-export default App; 
+export default App;
