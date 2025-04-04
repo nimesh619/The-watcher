@@ -346,6 +346,17 @@
     position: relative;
     overflow: hidden;
     margin-bottom: 1rem;
+    transition: box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.scanner-warning {
+    background-color: rgba(25, 15, 0, 0.3);
+    box-shadow: inset 0 0 20px rgba(255, 152, 0, 0.2);
+}
+
+.scanner-danger {
+    background-color: rgba(30, 0, 0, 0.3);
+    box-shadow: inset 0 0 30px rgba(244, 67, 54, 0.3);
 }
 
 .scanner-grid {
@@ -442,4 +453,99 @@
 
 .ecg-glow.danger {
     filter: drop-shadow(0 0 5px rgba(244, 67, 54, 0.8));
+}
+
+/* Panel pulsing effects */
+.pulse-warning {
+    animation: pulseWarning 2s infinite;
+}
+
+.pulse-danger {
+    animation: pulseDanger 1s infinite;
+}
+
+@keyframes pulseWarning {
+    0% {
+        box-shadow: 0 0 10px rgba(255, 152, 0, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(255, 152, 0, 0.6);
+    }
+    100% {
+        box-shadow: 0 0 10px rgba(255, 152, 0, 0.3);
+    }
+}
+
+@keyframes pulseDanger {
+    0% {
+        box-shadow: 0 0 15px rgba(244, 67, 54, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(244, 67, 54, 0.8);
+    }
+    100% {
+        box-shadow: 0 0 15px rgba(244, 67, 54, 0.4);
+    }
+}
+
+/* Device card styling */
+.device-card {
+    background: rgba(26, 26, 26, 0.6);
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.device-card:hover {
+    background: rgba(30, 30, 30, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.device-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.device-icon {
+    margin-right: 0.5rem;
+    font-size: 1.2rem;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.device-name {
+    font-weight: 500;
+}
+
+.device-details {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    color: var(--text-color-dark);
+}
+
+.pulse-animation {
+    animation: devicePulse 2s infinite;
+}
+
+@keyframes devicePulse {
+    0% {
+        border-color: rgba(255, 152, 0, 0.3);
+    }
+    50% {
+        border-color: rgba(255, 152, 0, 0.8);
+    }
+    100% {
+        border-color: rgba(255, 152, 0, 0.3);
+    }
 }

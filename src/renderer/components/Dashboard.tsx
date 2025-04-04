@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import FileScanner from './FileScanner';
 import ScanResults from './ScanResults';
+import SoundAlert from './SoundAlert';
 import '../styles/file-scanner.css';
 
 interface Device {
@@ -65,10 +65,13 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   ]);
   const [ecgPoints, setEcgPoints] = useState<string>('');
+  const [showEcg, setShowEcg] = useState(false);
   const ecgAnimationRef = useRef<any>(null);
+  const pulseIntervalRef = useRef<any>(null);
+  const [pulseIntensity, setPulseIntensity] = useState(1);
   
   // Generate ECG points for the visualization
-  const generateEcgPoints = () => {
+  const generateEcgPoints = (intensity = 1) => {
     const width = 1000;
     const height = 150;
     const midY = height / 2;
@@ -94,7 +97,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         const spikeHeight = threatLevel === 'danger' ? 50 : 30;
         
         // Replace points around the spike with ECG pattern
-        const spikePattern = generateSpikePattern(spikeX, midY, spikeHeight);
+        const spikePattern = generateSpikePattern(spikeX, midY, spikeHeight, intensity);
         
         // Insert the spike pattern into the points string
         const startIndex = Math.floor((spikeX - 40) / 10) * 10;
@@ -117,15 +120,17 @@ const Dashboard: React.FC<DashboardProps> = ({
   };
   
   // Generate a single ECG spike pattern
-  const generateSpikePattern = (x: number, midY: number, height: number) => {
-    const intensity = threatLevel === 'danger' ? 1.5 : 1;
+  const generateSpikePattern = (x: number, midY: number, height: number, intensity: number) => {
+    const baseIntensity = threatLevel === 'danger' ? 1.5 : 1;
+    const finalIntensity = baseIntensity * intensity;
+    
     return `
       ${x - 20},${midY} 
-      ${x - 15},${midY - 5 * intensity} 
-      ${x - 10},${midY + 10 * intensity} 
-      ${x - 5},${midY - height * intensity} 
-      ${x},${midY + height * 0.8 * intensity} 
-      ${x + 5},${midY - 10 * intensity} 
+      ${x - 15},${midY - 5 * finalIntensity} 
+      ${x - 10},${midY + 10 * finalIntensity} 
+      ${x - 5},${midY - height * finalIntensity} 
+      ${x},${midY + height * 0.8 * finalIntensity} 
+      ${x + 5},${midY - 10 * finalIntensity} 
       ${x + 15},${midY} 
     `;
   };
@@ -133,6 +138,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Update ECG visualization when threat level changes
   useEffect(() => {
     if (scanResult && scanResult.threatLevel !== 'normal') {
+      setShowEcg(true);
       const points = generateEcgPoints();
       setEcgPoints(points);
       
@@ -143,21 +149,53 @@ const Dashboard: React.FC<DashboardProps> = ({
       
       // Set up animation to update the ECG periodically
       ecgAnimationRef.current = setInterval(() => {
-        setEcgPoints(generateEcgPoints());
+        setEcgPoints(generateEcgPoints(pulseIntensity));
       }, 3000);
+      
+      // Create a pulsing effect
+      if (pulseIntervalRef.current) {
+        clearInterval(pulseIntervalRef.current);
+      }
+      
+      pulseIntervalRef.current = setInterval(() => {
+        setPulseIntensity(prev => {
+          // Oscillate between 0.8 and 1.2 for warning, 0.7 and 1.5 for danger
+          const min = threatLevel === 'danger' ? 0.7 : 0.8;
+          const max = threatLevel === 'danger' ? 1.5 : 1.2;
+          const range = max - min;
+          
+          return min + (Math.sin(Date.now() / 500) + 1) / 2 * range;
+        });
+      }, 50);
+      
     } else if (!isScanning && (!scanResult || scanResult.threatLevel === 'normal')) {
       // Clear the animation if there's no threat or during scanning
       if (ecgAnimationRef.current) {
         clearInterval(ecgAnimationRef.current);
         ecgAnimationRef.current = null;
       }
+      
+      if (pulseIntervalRef.current) {
+        clearInterval(pulseIntervalRef.current);
+        pulseIntervalRef.current = null;
+      }
+      
+      // Fade out the ECG
+      setTimeout(() => {
+        setShowEcg(false);
+      }, 500);
+      
       setEcgPoints('');
+      setPulseIntensity(1);
     }
     
     // Cleanup on unmount
     return () => {
       if (ecgAnimationRef.current) {
         clearInterval(ecgAnimationRef.current);
+      }
+      if (pulseIntervalRef.current) {
+        clearInterval(pulseIntervalRef.current);
       }
     };
   }, [scanResult, threatLevel, isScanning]);
@@ -256,6 +294,12 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <main className="main-content">
+      {/* Add sound alert component */}
+      <SoundAlert 
+        threatLevel={threatLevel} 
+        isActive={!isScanning && showEcg} 
+      />
+    
       {/* File Scanner Panel */}
       <div className="panel mb-2">
         <div className="panel-header">
@@ -273,21 +317,22 @@ const Dashboard: React.FC<DashboardProps> = ({
       </div>
 
       {/* Witcher-style scanner visualization */}
-      <div className="panel mb-2">
+      <div className={`panel mb-2 ${showEcg && threatLevel !== 'normal' ? `pulse-${threatLevel}` : ''}`}>
         <div className="panel-header">
           <div className="panel-title">System Scanner</div>
           <div className="flex-row gap-1">
-            <div className={`status-indicator ${isScanning ? 'active' : 'inactive'}`}></div>
-            <span>{isScanning ? 'Scanning...' : 'Idle'}</span>
+            <div className={`status-indicator ${isScanning ? 'active' : threatLevel}`}></div>
+            <span>{isScanning ? 'Scanning...' : threatLevel === 'normal' ? 'Secure' : 
+                  threatLevel === 'warning' ? 'Threat Detected' : 'DANGER'}</span>
           </div>
         </div>
         
         <div className="panel-content">
-          <div className="scanner-visual">
+          <div className={`scanner-visual ${showEcg && threatLevel !== 'normal' ? `scanner-${threatLevel}` : ''}`}>
             <div className="scanner-grid"></div>
             
             {/* ECG Visualization - shown when threat detected */}
-            {!isScanning && ecgPoints && (
+            {showEcg && ecgPoints && (
               <div className="ecg-container">
                 <svg width="100%" height="100%" viewBox="0 0 1000 150" preserveAspectRatio="none">
                   {/* Background line */}
@@ -300,13 +345,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <polyline 
                     className={`ecg-line ecg-animate ecg-glow ${threatLevel}`} 
                     points={ecgPoints}
+                    style={{
+                      animationDuration: `${threatLevel === 'danger' ? '2s' : '3s'}`
+                    }}
                   />
                   
                   {/* Second ECG line (offset for continuous animation) */}
                   <polyline 
                     className={`ecg-line ecg-animate ecg-glow ${threatLevel}`}
                     points={ecgPoints} 
-                    style={{ transform: 'translateX(100%)' }}
+                    style={{
+                      transform: 'translateX(100%)',
+                      animationDuration: `${threatLevel === 'danger' ? '2s' : '3s'}`
+                    }}
                   />
                 </svg>
               </div>

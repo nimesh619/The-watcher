@@ -50,7 +50,20 @@ class VirusTotalService {
             const analysisId = uploadResponse.data.data.id;
             console.log('File uploaded, analysis ID:', analysisId);
 
-            // Wait for analysis to complete
+            // Get the analysis link from the response
+            if (uploadResponse.data.data.type === 'analysis') {
+                return await this.pollAnalysisResults(analysisId, fileHash);
+            } else {
+                // If we didn't get an analysis object directly, check if there's a link to it
+                if (uploadResponse.data.data.links && uploadResponse.data.data.links.self) {
+                    // Extract the analysis ID from the URL
+                    const analysisUrl = uploadResponse.data.data.links.self;
+                    const urlAnalysisId = analysisUrl.split('/').pop();
+                    return await this.pollAnalysisResults(urlAnalysisId, fileHash);
+                }
+            }
+            
+            // Fallback to polling by file hash if we couldn't get a specific analysis ID
             return await this.pollResults(fileHash);
         } catch (error) {
             console.error('Error in scanFile:', error.message);
@@ -106,6 +119,71 @@ class VirusTotalService {
                     const fileReport = await this.getReport(fileHash);
                     if (fileReport) {
                         return fileReport;
+                    }
+                } else if (status === 'queued' || status === 'in-progress') {
+                    console.log(`Analysis ${status}, waiting...`);
+                } else {
+                    console.log(`Unknown status: ${status}`);
+                    break;
+                }
+                
+                // Wait between attempts
+                await new Promise(resolve => setTimeout(resolve, delaySeconds * 1000));
+            } catch (error) {
+                console.error(`Error in polling attempt ${i + 1}:`, error.message);
+                if (error.response) {
+                    console.error('API Response:', error.response.data);
+                }
+                
+                if (i === maxAttempts - 1) throw error;
+                
+                // Wait before retrying
+                await new Promise(resolve => setTimeout(resolve, delaySeconds * 1000));
+            }
+        }
+        
+        // After max attempts, try to get whatever results are available
+        const finalReport = await this.getReport(fileHash);
+        if (finalReport) return finalReport;
+        
+        throw new Error(`Analysis timed out after ${maxAttempts} attempts`);
+    }
+
+    async pollAnalysisResults(analysisId, fileHash, maxAttempts = 20, delaySeconds = 15) {
+        console.log('Polling for analysis results with analysis ID:', analysisId);
+        
+        for (let i = 0; i < maxAttempts; i++) {
+            try {
+                console.log(`Polling attempt ${i + 1}/${maxAttempts}`);
+                
+                // Get the current analysis status using the analysis ID
+                const response = await axios.get(`${VIRUSTOTAL_API_URL}/analyses/${analysisId}`, {
+                    headers: {
+                        'x-apikey': VIRUSTOTAL_API_KEY
+                    }
+                });
+                
+                const status = response.data.data.attributes.status;
+                
+                if (status === 'completed') {
+                    console.log('Analysis completed');
+                    
+                    // If the response contains a link to the file, use that to get the full report
+                    if (response.data.meta && response.data.meta.file_info) {
+                        const resultFileHash = response.data.meta.file_info.sha256;
+                        console.log('Analysis linked to file hash:', resultFileHash);
+                        
+                        // Get the full report using the file hash
+                        const fileReport = await this.getReport(resultFileHash || fileHash);
+                        if (fileReport) {
+                            return fileReport;
+                        }
+                    } else {
+                        // Get the full report using the original file hash
+                        const fileReport = await this.getReport(fileHash);
+                        if (fileReport) {
+                            return fileReport;
+                        }
                     }
                 } else if (status === 'queued' || status === 'in-progress') {
                     console.log(`Analysis ${status}, waiting...`);
