@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import FileScanner from './FileScanner';
 import ScanResults from './ScanResults';
 import '../styles/file-scanner.css';
@@ -63,6 +64,103 @@ const Dashboard: React.FC<DashboardProps> = ({
       time: new Date(Date.now() - 3600000)
     }
   ]);
+  const [ecgPoints, setEcgPoints] = useState<string>('');
+  const ecgAnimationRef = useRef<any>(null);
+  
+  // Generate ECG points for the visualization
+  const generateEcgPoints = () => {
+    const width = 1000;
+    const height = 150;
+    const midY = height / 2;
+    
+    let points = '';
+    let x = 0;
+    
+    // Normal baseline with small variations
+    while (x < width) {
+      const variation = Math.random() * 5 - 2.5;
+      points += `${x},${midY + variation} `;
+      x += 10;
+    }
+    
+    // For threat levels, add ECG-like spikes at intervals
+    if (threatLevel === 'warning' || threatLevel === 'danger') {
+      // Calculate spike positions
+      const spikeCount = threatLevel === 'danger' ? 5 : 3;
+      const spikeInterval = width / (spikeCount + 1);
+      
+      for (let i = 1; i <= spikeCount; i++) {
+        const spikeX = i * spikeInterval;
+        const spikeHeight = threatLevel === 'danger' ? 50 : 30;
+        
+        // Replace points around the spike with ECG pattern
+        const spikePattern = generateSpikePattern(spikeX, midY, spikeHeight);
+        
+        // Insert the spike pattern into the points string
+        const startIndex = Math.floor((spikeX - 40) / 10) * 10;
+        const endIndex = Math.floor((spikeX + 40) / 10) * 10;
+        
+        // Create a new points string with the spike integrated
+        const beforeSpike = points.split(' ')
+          .filter(p => p && parseInt(p.split(',')[0]) < startIndex)
+          .join(' ');
+          
+        const afterSpike = points.split(' ')
+          .filter(p => p && parseInt(p.split(',')[0]) > endIndex)
+          .join(' ');
+          
+        points = `${beforeSpike} ${spikePattern} ${afterSpike}`;
+      }
+    }
+    
+    return points;
+  };
+  
+  // Generate a single ECG spike pattern
+  const generateSpikePattern = (x: number, midY: number, height: number) => {
+    const intensity = threatLevel === 'danger' ? 1.5 : 1;
+    return `
+      ${x - 20},${midY} 
+      ${x - 15},${midY - 5 * intensity} 
+      ${x - 10},${midY + 10 * intensity} 
+      ${x - 5},${midY - height * intensity} 
+      ${x},${midY + height * 0.8 * intensity} 
+      ${x + 5},${midY - 10 * intensity} 
+      ${x + 15},${midY} 
+    `;
+  };
+  
+  // Update ECG visualization when threat level changes
+  useEffect(() => {
+    if (scanResult && scanResult.threatLevel !== 'normal') {
+      const points = generateEcgPoints();
+      setEcgPoints(points);
+      
+      // Cancel any existing animation
+      if (ecgAnimationRef.current) {
+        clearInterval(ecgAnimationRef.current);
+      }
+      
+      // Set up animation to update the ECG periodically
+      ecgAnimationRef.current = setInterval(() => {
+        setEcgPoints(generateEcgPoints());
+      }, 3000);
+    } else if (!isScanning && (!scanResult || scanResult.threatLevel === 'normal')) {
+      // Clear the animation if there's no threat or during scanning
+      if (ecgAnimationRef.current) {
+        clearInterval(ecgAnimationRef.current);
+        ecgAnimationRef.current = null;
+      }
+      setEcgPoints('');
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      if (ecgAnimationRef.current) {
+        clearInterval(ecgAnimationRef.current);
+      }
+    };
+  }, [scanResult, threatLevel, isScanning]);
 
   // When a scan is completed, update the last scan time and add to activities
   useEffect(() => {
@@ -187,6 +285,34 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="panel-content">
           <div className="scanner-visual">
             <div className="scanner-grid"></div>
+            
+            {/* ECG Visualization - shown when threat detected */}
+            {!isScanning && ecgPoints && (
+              <div className="ecg-container">
+                <svg width="100%" height="100%" viewBox="0 0 1000 150" preserveAspectRatio="none">
+                  {/* Background line */}
+                  <polyline 
+                    className="ecg-line-bg" 
+                    points={`0,75 1000,75`} 
+                  />
+                  
+                  {/* First ECG line (duplicate for animation effect) */}
+                  <polyline 
+                    className={`ecg-line ecg-animate ecg-glow ${threatLevel}`} 
+                    points={ecgPoints}
+                  />
+                  
+                  {/* Second ECG line (offset for continuous animation) */}
+                  <polyline 
+                    className={`ecg-line ecg-animate ecg-glow ${threatLevel}`}
+                    points={ecgPoints} 
+                    style={{ transform: 'translateX(100%)' }}
+                  />
+                </svg>
+              </div>
+            )}
+            
+            {/* Regular scanning animation - shown during scan */}
             {isScanning && <div className="scanner-line"></div>}
           </div>
           
